@@ -8,7 +8,9 @@
     "dist"
   ],
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "types": ["@types/node", "@types/react", "@types/vite-plugin-ssr"],
+    "jsxImportSource": "react",
+    "allowJs": true,
+    "resolveJsonModule": true
   }
 }

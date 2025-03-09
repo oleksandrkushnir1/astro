@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import directus from '../../lib/directus';
+import type { MySchema } from '../../lib/directus';
+import { GetStaticPaths } from 'astro';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+   try {
+	const worksResponse = await directus.items('works').readByQuery({
+	  fields: ['id'],
+	   filter: {
+		  status: {
+			_eq: 'published'
+		  }
+		}
+	});
+
+	if (!worksResponse.data) {
+	  return [];
+	}
+  const workPaths = worksResponse.data.map((work) => ({
+	params: { id: work.id.toString() },
+  }));
+  return workPaths
+  } catch (error) {
+	  console.error("Error fetching works:", error);
+	  return []; // Return an empty array on error
+	}
+}
+
+const { id } = Astro.params;
+
+ let work: MySchema['works'] | undefined;
+  try {
+	  const workResponse = await directus.items('works').readOne(id, {
+		fields: ['*', 'creator.*','creator.user.*', 'image.*', 'categories.*'],
+	  });
+	work = workResponse as MySchema['works'];
+  }
+  catch (error) {
+	console.error("Work id " + id + " does not exist:", error)
+  }
+
+if (!work) {
+  return { redirect: '/404' }; // Or render a 404 component
+}
+const imageUrl = work.image?.id
+? `${import.meta.env.PUBLIC_DIRECTUS_URL}/assets/${work.image.id}`
+: null;
+---
+
+<Layout title={work.title}>
+	<h1>{work.title}</h1>
+	<h2>By: <a href={"/creators/" + work.creator.id}>{work.creator.user? work.creator.user.first_name : ''} {work.creator.user ? work.creator.user.last_name: ''}</a></h2>
+	{imageUrl && (
+	<img src={imageUrl} alt={`Work image of ${work.title}`} width={work.image ? work.image.width : 100} height={work.image? work.image.height: 100} />
+	)}
+	 {work.content_type === 'text' && (
+	<p>{work.content}</p>
+  )}
+  <p>{work.description}</p>
+</Layout>
