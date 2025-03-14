@@ -1,0 +1,15 @@
+### Get all works
+GET http://localhost:8055/items/works
+Content-Type: application/json
+
+###
+GET http://localhost:8055/items/global
+Content-Type: application/json
+
+### Get all works with expanded relationships
+GET http://localhost:8055/items/works?fields=*,creator.*,creator.user.*,category.*
+Content-Type: application/json
+
+### Get single work with expanded relationships
+GET http://localhost:8055/items/works/1?fields=*,creator.*,creator.user.*,category.*
+Content-Type: application/json

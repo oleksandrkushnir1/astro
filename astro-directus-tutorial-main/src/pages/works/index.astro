@@ -1,0 +1,80 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { marked } from "marked";
+import {
+  avatar,
+  user,
+  category,
+  type Creator,
+  type Work,
+} from "../../lib/directus";
+import type { User } from "../../lib/directus";
+
+const directusAssetsUrl = import.meta.env.PUBLIC_DIRECTUS_URL + "/assets";
+
+// Fetch works from Directus
+const response = await fetch(
+  `${import.meta.env.PUBLIC_DIRECTUS_URL}/items/works?fields=*,creator.*,creator.user.*,category.*`,
+  {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+const data = await response.json();
+const works: Work[] = data.data;
+const description = (description: string) =>
+  description ? marked(description) : "";
+---
+
+<Layout title="Works Gallery">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">Our Works</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {
+        works.map((work) => (
+          <article class="border rounded-lg overflow-hidden shadow-lg">
+            {work.image && (
+              <img
+                src={`${directusAssetsUrl}/${work.image}`}
+                alt={work.title}
+                class="w-full h-48 object-cover"
+              />
+            )}
+            {work.creator && (
+              <img
+                src={`${import.meta.env.PUBLIC_DIRECTUS_URL}/assets/${avatar(user(work.creator))}`}
+                alt={`${user(work.creator)?.first_name}'s avatar`}
+                class="w-10 h-10 rounded-full"
+              />
+            )}
+            <div class="p-4">
+              <h2 class="text-xl font-semibold mb-2">{work.title}</h2>
+              <article
+                class="text-gray-600 mb-4 [&>p]:mb-4"
+                set:html={description(work.description)}
+              />
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">
+                  By {user(work.creator)?.first_name}{" "}
+                  {user(work.creator)?.last_name}
+                </span>
+                <span class="text-sm text-gray-500">
+                  {category(work.category)?.name}
+                </span>
+              </div>
+              <a
+                href={`/works/${work.id}`}
+                class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Read More
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </main>
+</Layout>
